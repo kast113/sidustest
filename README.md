@@ -12,7 +12,6 @@ run test
 ```bash
 make test
 ```
-make test
 
 stop docker-compose
 ```bash
