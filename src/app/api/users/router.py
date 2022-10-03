@@ -31,7 +31,7 @@ router.add_api_route(
 router.add_api_route(
     '/{user_id}/',
     response_model=UserOutSchema,
-    status_code=201,
+    status_code=200,
     methods=['PUT'],
     endpoint=update_user_view,
     responses={
