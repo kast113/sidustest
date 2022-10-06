@@ -1,17 +1,17 @@
 from functools import wraps
 import os
+
 import pickle
-from typing import Optional
 import aioredis
 
 
 REDIS_DSN = os.getenv("REDIS_DSN")
 
+
 class RedisCache:
-    
     def __init__(self):
         self.redis_cache = None
-        
+
     def init_cache(self):
         self.redis_cache = aioredis.from_url(REDIS_DSN)
 
@@ -23,7 +23,7 @@ class RedisCache:
 
     async def set(self, key, value):
         return await self.redis_cache.set(key, value)
-    
+
     async def get(self, key):
         return await self.redis_cache.get(key)
 
@@ -32,6 +32,7 @@ class RedisCache:
 
 
 redis_cache = RedisCache()
+
 
 def acached(rkey):
     """Redis cache decorator"""

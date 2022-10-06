@@ -1,0 +1,5 @@
+[flake8]
+exclude = 
+    src/.pytest_cache,
+    src/migrations,
+    src/tests

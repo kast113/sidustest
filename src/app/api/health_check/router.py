@@ -4,7 +4,7 @@ from app.api.health_check.views import health_check
 
 
 router = APIRouter(
-    tags=['Health Check'], 
+    tags=['Health Check'],
     prefix='/api/v1/health-check',
 )
 
