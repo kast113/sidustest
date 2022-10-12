@@ -7,6 +7,7 @@ from app.api.users.dependencies import get_current_user
 from app.api.users.service import UserCreate, UserGetOne, \
                                   UserUpdate, UserGetAll, \
                                   UserDelete
+from app.api.users.utils import user_cache
 # from app.utils.cache import redis_cache, acached
 
 
@@ -20,7 +21,7 @@ async def get_user_view_all(
     return [user async for user in service_user_all.execute()]
 
 
-# @acached(REDIS_KEY)
+@user_cache.cache_one_decorator()
 async def get_user_view(
     user_id: int,
     service_user_one: UserGetOne = Depends(UserGetOne),
@@ -37,6 +38,7 @@ async def create_user_view(
     return await service_user_create.execute(payload)
 
 
+@user_cache.clear_one_decorator()
 async def update_user_view(
     user_id: int,
     payload: UserUpdateSchema,
@@ -49,6 +51,7 @@ async def update_user_view(
     return await service_user_update.execute(user_id, payload)
 
 
+@user_cache.clear_one_decorator()
 async def delete_user_view(
     user_id: int,
     user: str = Depends(get_current_user),
