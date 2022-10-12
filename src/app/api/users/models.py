@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Optional
+from typing import AsyncIterator, Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +20,16 @@ class Users(Base):
     updated_at = Column(DateTime, default=func.now(), nullable=False)
 
     @classmethod
+    async def get_all(
+        cls,
+        session: AsyncSession
+    ) -> AsyncIterator[Users]:
+        stmt = select(cls)
+        stream = await session.stream(stmt.order_by(cls.id))
+        async for row in stream:
+            yield row.Users
+
+    @classmethod
     async def get_by_id(
         cls,
         session: AsyncSession,
@@ -29,8 +39,6 @@ class Users(Base):
         result = (await session.execute(stmt)).first()
         if not result:
             return None
-        print('GET BY ID')
-        print(result)
         return result.Users
 
     @classmethod
@@ -75,4 +83,9 @@ class Users(Base):
         self.name = name
         self.email = email
         self.updated_at = datetime.now()
+        await session.flush()
+
+    @classmethod
+    async def delete(cls, session: AsyncSession, user: Users) -> None:
+        await session.delete(user)
         await session.flush()
