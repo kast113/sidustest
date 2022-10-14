@@ -20,5 +20,5 @@ async_session = sessionmaker(
 async def db_session() -> AsyncSession:
     try:
         yield async_session
-    except SQLAlchemyError as e:
-        logger.exception(e)
+    except SQLAlchemyError as exc:
+        logger.exception(exc)
