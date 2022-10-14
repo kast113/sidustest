@@ -1,0 +1,13 @@
+[MASTER]
+
+# fix imports in subdirectory
+init-hook='import sys, os; sys.path.append(os.path.join(os.path.abspath(os.getcwd()), "src"));'
+
+# ignore  
+ignore-paths=^src/migrations/.*$,
+             ^src/tests/.*$
+
+disable=
+    C0114, # missing-module-docstring
+    C0115, # missing-class-docstring
+    C0116, # missing-function-docstring
