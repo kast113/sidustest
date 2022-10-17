@@ -1,6 +1,7 @@
 import logging
 import os
 
+from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_async_engine(DATABASE_URL, echo=True)
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData())
 
 async_session = sessionmaker(
     engine, class_=AsyncSession, future=True, autoflush=False

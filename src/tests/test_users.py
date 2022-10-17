@@ -1,52 +1,101 @@
-from datetime import datetime
-import json
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from dirty_equals import IsInstance
 
-from app.api.users import views
-from app.api.users.entity import UserEntity
-
-
-def test_create_with_invalid_data(test_app):
-    response = test_app.post(
-        "/api/v1/users/", data=json.dumps({"description": "description"}))
-    assert response.status_code == 422
+from app.api.users.models import Users
 
 
-def test_create_user(test_app, monkeypatch):
-    async def mock_create_user(payload):
-        return 1
+async def setup_data(session: AsyncSession):
+    user_1 = Users(name="User1", email="user1@email.com", password="password1")
+    user_2 = Users(name="User2", email="user2@email.com", password="password2")
+    user_3 = Users(name="User3", email="user3@email.com", password="password3")
 
-    monkeypatch.setattr(views, "create_user", mock_create_user)
+    session.add_all([user_1, user_2, user_3])
+    await session.flush()
+    await session.commit()
 
-    user = {
-        "name": "Sasha",
-        "email": "sasha@outloo.k",
-        "password": "qwerty"
+
+@pytest.mark.asyncio
+async def test_users_create_with_invalid_data(
+    ac: AsyncClient, session: AsyncSession
+) -> None:
+    response = await ac.post(
+        "/api/v1/users/",
+        json={"description": "description"}
+    )
+    assert 422 == response.status_code
+
+
+@pytest.mark.asyncio
+async def test_users_create(
+    ac: AsyncClient, session: AsyncSession
+) -> None:
+    user_json = {
+        "name": "user9",
+        "email": "user9@email.com",
+        "password": "password9"
     }
-    response = test_app.post(
-        "/api/v1/users/", data=json.dumps(user))
-    assert response.status_code == 201
-    assert response.json() == {
-        "id": 1,
-        "name": "Sasha",
-        "email": "sasha@outloo.k"
+    response = await ac.post(
+        "/api/v1/users/",
+        json=user_json
+    )
+    assert 201 == response.status_code
+    expected_response = {
+        "id": IsInstance(int),
+        "name": "user9",
+        "email": "user9@email.com"
     }
+    assert expected_response == response.json()
 
 
-def test_get_user(test_app, monkeypatch):
-    async def mock_get_user(id):
-        return UserEntity(
-            id=1, name="Ivan", email="em@mail.r", password="hashed", 
-            created_at=datetime.now(), updated_at=datetime.now())
+@pytest.mark.asyncio
+async def test_users_find_not_existen(
+    ac: AsyncClient, session: AsyncSession
+) -> None:
+    response = await ac.get("/api/v1/users/999/")
+    assert 404 == response.status_code
 
-    monkeypatch.setattr(views, "get_user_by_id", mock_get_user)
-    response = test_app.get("/api/v1/users/1/")
-    assert response.status_code == 200
-    assert response.json() == {
-        "id": 1,
-        "name": "Ivan",
-        "email": "em@mail.r"
+
+@pytest.mark.asyncio
+async def test_users_find_one(ac: AsyncClient, session: AsyncSession) -> None:
+    user_1 = Users(name="User1", email="user1@email.com", password="password1")
+    session.add(user_1)
+    await session.flush()
+
+    response = await ac.get(f"/api/v1/users/{user_1.id}/")
+    assert 200 == response.status_code
+
+    expected_response = {
+        "id": IsInstance(int),
+        "name": "User1",
+        "email": "user1@email.com"
     }
+    assert expected_response == response.json()
 
-    # response = test_app.post("/api/v1/users/")
-    # assert response.status_code == 200
-    # assert response.json() == {"success": True}
+
+@pytest.mark.asyncio
+async def test_users_find_all(ac: AsyncClient, session: AsyncSession) -> None:
+    await setup_data(session)
+
+    response = await ac.get("/api/v1/users/")
+    assert 200 == response.status_code
+
+    expected_response = [
+        {
+            "id": IsInstance(int),
+            "name": "User1",
+            "email": "user1@email.com"
+        },
+        {
+            "id": IsInstance(int),
+            "name": "User2",
+            "email": "user2@email.com"
+        },
+        {
+            "id": IsInstance(int),
+            "name": "User3",
+            "email": "user3@email.com"
+        }
+    ]
+    assert expected_response == response.json()

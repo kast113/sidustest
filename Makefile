@@ -5,7 +5,10 @@ down:
 	docker-compose down
 
 test:
-	docker-compose exec web pytest .
+	docker-compose exec web pytest . -v -rsxX
+
+test-short:
+	docker-compose exec web pytest -v -rsxX -l --tb=short --strict -p no:warnings
 
 alembic-init:
 	docker-compose exec web alembic init -t async migrations
